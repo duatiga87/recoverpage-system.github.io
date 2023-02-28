@@ -1,0 +1,1426 @@
+
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+window.URL = window.URL || window.webkitURL;
+
+if (typeof window.capp.have_scroll_to_top != 'undefined' && window.capp.have_scroll_to_top) {
+    var controlHTML = '<img src="' + window.capp.base_url + 'application/tribelio/default/media/img/up.png" style="width:45px; height:45px" />';
+    var topControl = $('body').find('#topcontrol');
+    topControl.empty();
+    topControl.append(controlHTML);
+}
+
+window.addEventListener('cresenity:loaded', function () {
+    window.cresenity.setCallback('onReloadSuccess', function (response) {
+        if (response.ajaxData && response.ajaxData.isLoginPage) {
+            window.location.reload();
+        }
+    });
+    if($('#tb-loading').length>0) {
+        $('#tb-loading').remove();
+    }
+});
+
+$(document).ready(function () {
+    $(function () {
+        var options = {
+            tooltips: {
+                controls: false,
+                seek: true
+            }
+        };
+        var $player = $('.video-player');
+        $player.each(function () {
+            // eslint-disable-next-line no-unused-vars
+            var videoPlayer = window.plyr.setup(this, options)[0];
+        });
+    });
+
+    $('.animation').each(function () {
+        var $element = $(this);
+        $element.waypoint(function () {
+            var delay = 0;
+            if ($element.attr('data-delay')) {
+                delay = parseInt($element.attr('data-delay'), 0);
+            }
+            if (!$element.hasClass('animated')) {
+                setTimeout(function () {
+                    $element.addClass('animated ' + $element.attr('data-animation'));
+                }, delay);
+            }
+            delay = 0;
+        }, {
+            offset: '90%'
+        });
+    });
+
+    if ($.fn.datepicker) {
+        $('#datepicker').datepicker({
+            format: 'dd-mm-yyyy'
+        });
+    }
+
+    $('.stop-propagation').click(function (e) {
+        e.stopPropagation();
+    });
+
+    $(document).on('click', '.act-visitor-share-blog-url', function () {
+        var url = $(this).attr('data-url');
+        var shareUrl = $(this).attr('data-share-url');
+        window.cresenity.modal({reload: {url: url, dataAddition: {shareUrl: shareUrl}}, backdrop: true, modalClass: 'modal-tribe-confirmation modal-rounded', title: '<b>Share Blog</b>'});
+    });
+
+    $(document).on('click', '.act-share-blog', function (e) {
+        e.preventDefault();
+        var dataSharer = $(this).attr('data-sharer-temp');
+        $(this).attr('data-sharer', dataSharer);
+        var sharerInit = new window.Sharer(this);
+        sharerInit.share();
+    });
+
+    /**
+     * Smooth scroll menu
+     */
+    var isScrollMenu = $('.scroll-menu');
+
+    if (isScrollMenu.length > 0) {
+        $(isScrollMenu).on('click', function (e) {
+            e.preventDefault();
+            var parentLi = $(this).parent();
+            var originalUrl = $(this).attr('href');
+            var target = this.hash;
+            var $target = $(target);
+            var isHome = $target.offset();
+            var dataPosition = $(this).data('position');
+            if (typeof isHome == 'undefined') {
+                window.location.href = originalUrl;
+            }
+            var positionAdjusment = 30;
+            if (typeof dataPosition != 'undefined') {
+                positionAdjusment = dataPosition;
+            }
+            $('html, body').stop(false, true).animate({
+                scrollTop: $target.offset().top - positionAdjusment
+            }, 1000, 'swing');
+
+            isScrollMenu.parent().removeClass('active');
+            parentLi.addClass('active');
+        });
+    }
+    $('.coming-soon-toastr').each(function () {
+        if (!$(this).hasClass('coming-soon-toastr-inited')) {
+            $(this).click(function () {
+                window.toastr.info('This feature will be coming soon', 'Coming Soon');
+            });
+            $(this).addClass('coming-soon-toastr-inited');
+        }
+    });
+
+    if (typeof tippy != 'undefined') {
+        window.tippy('.member-lookup-like-comment', {
+            content: 'Loading...',
+            animateFill: false,
+            animation: 'fade',
+            flipOnUpdate: true,
+            theme: 'light',
+            onShow(instance) {
+                var ajaxUrl = instance.reference.dataset.url;
+                $.ajax({
+                    method: 'GET',
+                    url: ajaxUrl,
+                    dataType: 'json',
+                    beforeSend: function () {},
+                    success: function (res) {
+                        var errCode = res.errCode;
+                        var errMessage = res.errMessage;
+                        var data = res.data;
+                        if (errCode > 0) {
+                            window.toastr.info(errMessage, 'Failed');
+                        } else {
+                            var items = data.items;
+                            var tableContent = $('<table>');
+                            $.each(items, function (k, v) {
+                                var tableTr = $('<tr>');
+                                var tableTd = $('<td>');
+                                tableTd.append(v.name);
+                                tableTr.append(tableTd);
+                                tableContent.append(tableTr);
+                            });
+                            $('.tippy-content').append(tableContent);
+                        }
+                    }
+                });
+            },
+            onHidden() {
+                $('.tippy-content').empty();
+            }
+        });
+
+        window.tippy('[data-tippy-content]', {
+            arrow: true,
+            arrowType: 'round',
+            theme: 'light',
+            animateFill: false,
+            animation: 'shift-away'
+        });
+    }
+
+    var postActionCommentDelete = $('.post-action-comment-delete');
+    if (postActionCommentDelete.length > 0) {
+        if (!$('body').hasClass('post-comment-inited')) {
+            $('body').addClass('post-comment-inited');
+            $(document).on('click', '.post-action-comment-delete', function () {
+                var targetUrl = $(this).attr('data-url');
+                var memberId = $(this).attr('data-member-id');
+                var commentId = $(this).attr('data-comment-id');
+                var divParent = $(this).closest('.media');
+                var divPostWrapper = $(this).closest('.card-post');
+                $.ajax({
+                    method: 'POST',
+                    url: targetUrl,
+                    data: {memberId: memberId, commentId: commentId},
+                    dataType: 'json',
+                    beforeSend: function () {
+                        $(divParent).find('.modal').modal('hide');
+                        $(divParent).hide('slow');
+                    },
+                    success: function (res) {
+                        if (res.errCode > 0) {
+                            window.TB.showError(res.errMessage);
+                            $(divParent).show('fast');
+                        } else {
+                            var data = res.data;
+                            var countDeleted = data.countDeleted;
+                            var lastCountComment = $(divPostWrapper).find('.count-post-comment').text();
+                            if (parseInt(lastCountComment) && parseInt(lastCountComment) > 0) {
+                                lastCountComment = parseInt(lastCountComment) - countDeleted;
+                            }
+                            $(divPostWrapper).find('.count-post-comment').text(lastCountComment);
+                        }
+                    },
+                    failed: function (res) {
+                        window.TB.showError(res.errMessage);
+                        $(divParent).show('fast');
+                    }
+                });
+            });
+        }
+    }
+
+    var postActionChiefHideComment = $('.post-action-chief-hide-comment');
+    if (postActionChiefHideComment.length > 0) {
+        if (!$('body').hasClass('post-comment-chief-hide-inited')) {
+            $('body').addClass('post-comment-chief-hide-inited');
+            $(document).on('click', '.post-action-chief-hide-comment', function () {
+                var targetUrl = $(this).attr('data-url');
+                var memberId = $(this).attr('data-member-id');
+                var commentId = $(this).attr('data-comment-id');
+                var divParent = $(this).closest('.media');
+                var divPostWrapper = $(this).closest('.card-post');
+                var elmFlag = $(this).attr('data-element-flag');
+                $.ajax({
+                    method: 'POST',
+                    url: targetUrl,
+                    data: {memberId: memberId, commentId: commentId},
+                    dataType: 'json',
+                    beforeSend: function () {
+                        $(divParent).find('.modal').modal('hide');
+                    },
+                    success: function (res) {
+                        if (res.errCode > 0) {
+                            window.TB.showError(res.errMessage);
+                        } else {
+                            var data = res.data;
+                            var countDeleted = data.countDeleted;
+                            var lastCountComment = $(divPostWrapper).find('.count-post-comment').text();
+                            if (parseInt(lastCountComment) && parseInt(lastCountComment) > 0) {
+                                lastCountComment = parseInt(lastCountComment) - countDeleted;
+                            }
+                            $(divPostWrapper).find('.count-post-comment').text(lastCountComment);
+                            $(elmFlag).removeClass('d-none');
+                        }
+                    },
+                    failed: function (res) {
+                        window.TB.showError(res.errMessage);
+                    }
+                });
+            });
+        }
+    }
+
+    /**
+     * single-card-post is wrapper for card post
+     */
+
+    if (!window.tbInitialized) {
+        $(document).on('click', '.report-post', function (e) {
+            e.preventDefault();
+            var cardPostWrapper = $(this).closest('.single-card-post');
+            var postId = cardPostWrapper.attr('data-post-id');
+            var modalReport = $('#modal-report-post-' + postId);
+            modalReport.modal('show');
+        });
+        $(document).on('click', '.send-report-post', function (e) {
+            e.preventDefault();
+            var modalWrapper = $(this).closest('.modal-report-post');
+            var frm = modalWrapper.find('form');
+            var data = frm.serialize();
+            var url = frm.attr('action');
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: data,
+                dataType: 'json',
+                beforeSend: function () {
+                    window.TB.blockElement(frm);
+                },
+                success: function () {
+                    window.TB.showSuccess('Successfully send report post');
+                    $('.modal-report-post').modal('hide');
+                    window.TB.unblockElement(frm);
+                },
+                failed: function () {
+                    window.TB.unblockElement(frm);
+                }
+            });
+        });
+
+        $(document).on('click', '.modal-post-starred', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            var starred = $(this).attr('data-starred');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId, starred: starred}}, backdrop: true, modalClass: 'modal-rounded modal-centered'});
+        });
+        $(document).on('click', '.edit-post', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+
+            var modalOptions = {};
+            var urlModal = url + '/' + postId;
+            modalOptions.modalClass = 'modal-post-edit';
+            modalOptions.title = 'Edit Post';
+            modalOptions.reload = {};
+            modalOptions.reload.url = urlModal;
+            window.TB.modal(modalOptions);
+        });
+
+        $(document).on('click', '.delete-post', function (e) {
+            e.preventDefault();
+            var btn = $(this);
+
+            window.cresenity.confirm({
+                message: 'Are you sure?',
+                onConfirmed: function (confirm) {
+                    if (confirm) {
+                        var url = btn.attr('data-url');
+                        var postId = btn.attr('data-post-id');
+                        var cardPostWrapper = btn.closest('.single-card-post');
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            data: {postId: postId},
+                            dataType: 'json',
+                            beforeSend: function () {
+                                cardPostWrapper.hide('show');
+                            },
+                            success: function (res) {
+                                var errCode = res.errCode;
+                                var errMessage = res.errMessage;
+                                if (errCode > 0) {
+                                    window.TB.showError(errMessage);
+                                    cardPostWrapper.show('fast');
+                                }
+                            },
+                            // eslint-disable-next-line no-unused-vars
+                            failed: function (res) {
+                                window.TB.showError('delete post failed, please try again later!');
+                                cardPostWrapper.show('fast');
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.modal-post-archieved', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            var archieved = $(this).attr('data-archieved');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId, archieved: archieved}}, backdrop: true, modalClass: 'modal-rounded modal-centered'});
+        });
+
+        $(document).on('click', '.modal-chief-hide-post', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            var publishStatus = $(this).attr('data-publish-status');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId, publishStatus: publishStatus}}, backdrop: true, modalClass: 'modal-rounded modal-centered'});
+        });
+
+        $(document).on('click', '.modal-chief-post-tags', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId}}, backdrop: true, modalClass: 'modal-rounded modal-centered'});
+        });
+
+        $(document).on('click', '.modal-chief-post-special-offer', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId}}, backdrop: true, modalClass: 'modal-rounded modal-centered'});
+        });
+
+        $(document).on('click', '.modal-chief-post-pinned', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            var pinned = $(this).attr('data-pinned');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId, pinned: pinned}}, backdrop: true, modalClass: 'modal-rounded modal-centered'});
+        });
+        $(document).on('click', '.info-comment', function (e) {
+            e.preventDefault();
+            var isJoined = $(this).attr('data-is-joined');
+            var postId = $(this).attr('data-post-id');
+            if (isJoined == 0) {
+                window.TB.showError('Please Join This Tribe');
+                return false;
+            }
+            $('.post-comment-container-for-post-' + postId).find('input[name="content"]').focus();
+        });
+
+        $(document).on('click', '.act-hide-post', function (e) {
+            e.preventDefault();
+            var cardPostWrapper = $(this).closest('.single-card-post');
+            var url = $(this).attr('data-url');
+            var postId = $(this).attr('data-post-id');
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {postId: postId},
+                dataType: 'json',
+                beforeSend: function () {
+                    cardPostWrapper.hide('show');
+                },
+                success: function (res) {
+                    var errCode = res.errCode;
+                    var errMessage = res.errMessage;
+                    if (errCode > 0) {
+                        window.TB.showError(errMessage);
+                        cardPostWrapper.show('fast');
+                    }
+                },
+                // eslint-disable-next-line no-unused-vars
+                failed: function (res) {
+                    window.TB.showError('hide post failed, please try again later!');
+                    cardPostWrapper.show('fast');
+                }
+            });
+        });
+        $(document).on('click', '.act-like-post', function (e) {
+            e.preventDefault();
+            var isJoined = $(this).attr('data-is-joined');
+
+            if (isJoined == 0) {
+                window.TB.showError('Please Join This Tribe');
+                return false;
+            }
+            (function (likeElement) {
+                if (!likeElement.hasClass('loading')) {
+                    likeElement.addClass('loading');
+                    var postId = likeElement.attr('data-post-id');
+                    var dataUrl = likeElement.attr('data-url');
+                    var dataFrom = likeElement.attr('data-from');
+                    $.ajax({
+                        type: 'POST',
+                        url: dataUrl,
+                        data: {postId: postId},
+                        dataType: 'json',
+                        success: function (responseData) {
+                            window.TB.handleResponse(responseData, function (data) {
+                                if (likeElement.find('i').hasClass('far')) {
+                                    likeElement.find('i').removeClass('far').addClass('fas orange');
+                                } else {
+                                    likeElement.find('i').removeClass('fas orange').addClass('far');
+                                }
+                                if (dataFrom == 'home-new-feed') {
+                                    $('.counter-like'+postId).html(data.countLikeInKilo);
+
+                                    if (data.countLikeInKilo > 0) {
+                                        $('.info-like-post'+postId).removeClass('d-none');
+                                    }else{
+                                        $('.info-like-post'+postId).addClass('d-none');
+                                    }
+
+                                    if (data.status === 'like') {
+                                        $('.act-like-post'+postId).addClass('active');
+                                    }else{
+                                        $('.act-like-post'+postId).removeClass('active');
+                                    }
+                                }else{
+                                    likeElement.find('.count-like').html(data.countLikeInKilo);
+                                }
+                            });
+                        },
+                        // eslint-disable-next-line no-unused-vars
+                        complete: function (data) {
+                            likeElement.removeClass('loading');
+                        }
+                    });
+                }
+            }($(this)));
+        });
+
+        $(document).on('click', '.social-button-copy', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            var getId = $(this).attr('id');
+            window.TB.copyText('social-copy-link-input' + getId);
+            $('#social-copy-link-input' + getId).addClass('d-none');
+        });
+
+        //        var postActionSeeMore = $('.post-action-see-more');
+        //        if (postActionSeeMore.length > 0) {
+        $(document).on('click', '.post-action-see-more', function () {
+            var actionWrapper = $(this).closest('.inner-content-action');
+            var contentWrapper = $(this).closest('.inner-content');
+            $(contentWrapper).find('.excerpt-content-post').addClass('d-none');
+            $(contentWrapper).find('.full-content-post').removeClass('d-none');
+            $(contentWrapper).removeClass('content-overflow');
+            $(actionWrapper).remove();
+        });
+        //        }
+
+        $(document).on('click', '.btn-load-detail-vote', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            var url = $(this).attr('data-url');
+            let postId = $(this).data('post-id');
+            window.cresenity.modal({reload: {url: url, dataAddition: {postId: postId}}, backdrop: true, modalClass: 'modal-rounded modal-centered modal-detail-vote'});
+        });
+
+        $(document).on('click', '.click-options-polling', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            let pollingWrapper = $(this).closest('.polling-container');
+            if (!pollingWrapper.hasClass('polling-closed')) {
+                $('.form-check-input').removeAttr('checked');
+                $(this).find('.form-check-input').attr('checked', 'checked');
+            }
+            pollingWrapper.find('.member-vote-polling').removeClass('disabled');
+        });
+
+        $(document).on('click', '.member-vote-polling', function () {
+            var pollingWrapper = $(this).closest('.polling-container');
+            var dataUrl = pollingWrapper.attr('data-url');
+            var postId = pollingWrapper.attr('data-post-id');
+            var postPollingOptionId = pollingWrapper.find('input[name=postPollingOptionId]:checked').val();
+            var pollingOptionWrapper = pollingWrapper.find('.polling-options');
+            // eslint-disable-next-line no-unused-vars
+            var pollingOption = pollingOptionWrapper.find('li');
+            if (typeof postPollingOptionId == 'undefined' || postPollingOptionId.length == 0) {
+                window.TB.showError('Please select choice');
+                return false;
+            }
+
+            $.ajax({
+                method: 'POST',
+                url: dataUrl,
+                data: {postId: postId, postPollingOptionId: postPollingOptionId},
+                dataType: 'json',
+                beforeSend: function () {
+                    window.TB.blockElement(pollingWrapper);
+                },
+                success: function (res) {
+                    var errCode = res.errCode;
+                    var errMessage = res.errMessage;
+                    var data = res.data;
+                    if (errCode > 0) {
+                        window.TB.showError(errMessage);
+                    }
+                    if (errCode == 0) {
+                        pollingWrapper.addClass('polling-closed');
+                        pollingWrapper.find('.polling-action').hide();
+                        var options = data.options;
+                        var voteCountPolling = data.voteCount;
+                        var endDateLabel = data.endDateLabel;
+                        $.each(options, function (k, v) {
+                            var postPollingOptionId = v.postPollingOptionId;
+                            var isVote = v.isVote;
+                            // eslint-disable-next-line no-unused-vars
+                            var votePercent = v.votePercent;
+                            var votePercentLabel = v.votePercent + '%';
+
+                            // update UI
+                            var liExisting = pollingOptionWrapper.find('.polling-option-' + postPollingOptionId);
+                            if (isVote == 1) {
+                                liExisting.addClass('active');
+                            }
+                            $(liExisting).find('.vote-progress').css('width', votePercentLabel);
+                            $(liExisting).find('.percent-info').text(votePercentLabel);
+                        });
+                        pollingWrapper.find('.vote-count').text(voteCountPolling);
+                        pollingWrapper.find('.vote-end-date-label').text(endDateLabel);
+                        window.location.reload();
+                    }
+                    window.TB.unblockElement(pollingWrapper);
+                },
+                failed: function (res) {
+                    window.TB.showError(res.errMessage);
+                    window.TB.unblockElement(pollingWrapper);
+                }
+            });
+        });
+
+        window.tbInitilized = true;
+    }
+});
+
+
+var TB = function () {
+    this.maxFileSize = 10 * 1024 * 1024;
+
+    this.isset = function () {
+        var a = arguments;
+        var l = a.length;
+        var i = 0;
+        if (l == 0) {
+            throw new Error('Empty isset');
+        }
+        while (i != l) {
+            if (typeof (a[i]) == 'undefined' || a[i] === null) {
+                return false;
+            }
+            i++;
+        }
+        return true;
+    };
+    this.empty = function (mixedVar) {
+        var key;
+        if (mixedVar === '' || mixedVar === 0 || mixedVar === '0' || mixedVar === null || mixedVar === !1 || mixedVar === undefined || this.trim(mixedVar) == '') {
+            return true;
+        }
+        if (typeof mixedVar == 'object') {
+            for (key in mixedVar) {
+                if (typeof mixedVar[key] !== 'function') {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+
+    this.trim = function (str, charlist) {
+        var whitespace, l = 0, i = 0;
+        str += '';
+        if (!charlist) {
+            whitespace = ' \n\r\t\f\x0b\xa0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000';
+        } else {
+            charlist += '';
+            whitespace = charlist.replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '\$1');
+        }
+        l = str.length;
+        for (i = 0; i < l; i++) {
+            if (whitespace.indexOf(str.charAt(i)) === -1) {
+                str = str.substring(i);
+                break;
+            }
+        }
+        l = str.length;
+        for (i = l - 1; i >= 0; i--) {
+            if (whitespace.indexOf(str.charAt(i)) === -1) {
+                str = str.substring(0, i + 1);
+                break;
+            }
+        }
+        return whitespace.indexOf(str.charAt(0)) === -1 ? str : '';
+    };
+    this.ltrim = function (str, charlist) {
+        charlist = !charlist ? ' \s\xA0' : (charlist + '').replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '\$1');
+        var re = new RegExp('^[' + charlist + ']+', 'g');
+        return(str + '').replace(re, '');
+    };
+    this.rtrim = function (str, charlist) {
+        charlist = !charlist ? ' \s\xA0' : (charlist + '').replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '\$1');
+        var re = new RegExp('[' + charlist + ']+$', 'g');
+        return(str + '').replace(re, '');
+    };
+
+    this.checkFileExtension = function (filename, allowedExtension) {
+        if (filename.length <= 0) {
+            return false;
+        }
+        var blnValid = false;
+        for (var j = 0; j < allowedExtension.length; j++) {
+            var sCurExtension = allowedExtension[j];
+            if (filename.substr(filename.length - sCurExtension.length, sCurExtension.length).toLowerCase() == sCurExtension.toLowerCase()) {
+                blnValid = true;
+                break;
+            }
+        }
+
+        if (!blnValid) {
+            return false;
+        }
+
+        return true;
+    };
+    this.handleResponse = function (response, onSuccess, defaultUnexpectedMessage) {
+        if (typeof defaultUnexpectedMessage == 'undefined') {
+            defaultUnexpectedMessage = 'Unexpected error happen, please relogin ro refresh this page';
+        }
+
+        if (response.errCode == 0) {
+            if (typeof onSuccess == 'function') {
+                onSuccess(response.data);
+            }
+        } else {
+            if(typeof (defaultUnexpectedMessage)=='function') {
+                return defaultUnexpectedMessage(response.errMessage);
+            }
+
+            if (typeof response.errMessage == 'undefined') {
+                if (response.title == 'Tribelio - Login Account') {
+                    TB.showError('Your session has ended, please relogin or refresh this page');
+                } else {
+                    TB.showError(defaultUnexpectedMessage);
+                }
+            } else {
+                TB.showError(response.errMessage);
+            }
+        }
+    };
+
+
+    this.countdownTimer = function (options) {
+        var settings = $.extend({
+            seconds: 0,
+            selector: null
+        }, options);
+        var selector = settings.selector;
+        var seconds = parseInt(settings.seconds);
+        var countdownTime = new Date();
+        countdownTime.setSeconds(countdownTime.getSeconds() + seconds);
+
+        // eslint-disable-next-line no-unused-vars
+        var intervalHandler = setInterval(() => {
+            const difference = countdownTime - (new Date());
+            let remaining = 'Time\'s up!';
+            if (difference > 0) {
+                const parts = {
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((difference / 1000 / 60) % 60),
+                    seconds: Math.floor((difference / 1000) % 60)
+                };
+
+                remaining = Object.keys(parts)
+                    .map(part => {
+                        if (!parts[part]) {return;}
+                        return `${parts[part]} ${part}`;
+                    })
+                    .join(' ');
+            }
+            $(selector).html(remaining);
+        }, 1000);
+    };
+    this.showInfo = function (message) {
+        window.toastr.info(message, 'Info', {
+            positionClass: 'toast-top-right',
+            closeButton: true,
+            progressBar: true,
+            preventDuplicates: false,
+            newestOnTop: false
+
+        });
+    };
+    this.closeLastModal = function () {
+        return window.cresenity.closeLastModal();
+    };
+    this.showError = function (message) {
+        window.toastr.error(message, 'Oops...', {
+            positionClass: 'toast-top-right',
+            closeButton: true,
+            progressBar: true,
+            preventDuplicates: false,
+            newestOnTop: false
+
+        });
+    };
+
+    // eslint-disable-next-line no-unused-vars
+    this.showSuccess = function (message) {
+        //
+        //         toastr['success'](message, 'Success', {
+        //             positionClass: 'toast-top-right',
+        //             closeButton: true,
+        //             progressBar: true,
+        //             preventDuplicates: false,
+        //             newestOnTop: false,
+        //
+        //         });
+
+    };
+    this.formatNumber = function (rp) {
+        rp = '' + rp;
+        var rupiah = '';
+        var vfloat = '';
+        var ds = window.capp.decimal_separator;
+        var ts = window.capp.thousand_separator;
+        var dd = window.capp.decimal_digit;
+        dd = parseInt(dd);
+        var minusStr = '';
+        if (rp.indexOf('-') >= 0) {
+            minusStr = rp.substring(rp.indexOf('-'), 1);
+            rp = rp.substring(rp.indexOf('-') + 1);
+        }
+
+        if (rp.indexOf('.') >= 0) {
+            vfloat = rp.substring(rp.indexOf('.'));
+            rp = rp.substring(0, rp.indexOf('.'));
+        }
+        let p = rp.length;
+        let l;
+        while (p > 3) {
+            rupiah = ts + rp.substring(p - 3) + rupiah;
+            l = rp.length - 3;
+            rp = rp.substring(0, l);
+            p = rp.length;
+        }
+        rupiah = rp + rupiah;
+        vfloat = vfloat.replace('.', ds);
+        if (vfloat.length > dd) {
+            vfloat = vfloat.substring(0, dd + 1);
+        }
+        if (dd == 0) {
+            vfloat = '';
+        }
+        return minusStr + rupiah + vfloat;
+    };
+    this.formatCurrency = function (rp) {
+        rp = '' + rp;
+        var rupiah = '';
+        var vfloat = '';
+        var ds = window.capp.decimal_separator;
+        var ts = window.capp.thousand_separator;
+        var dd = 2;
+        dd = parseInt(dd);
+        var minusStr = '';
+        if (rp.indexOf('-') >= 0) {
+            minusStr = rp.substring(rp.indexOf('-'), 1);
+            rp = rp.substring(rp.indexOf('-') + 1);
+        }
+
+        if (rp.indexOf('.') >= 0) {
+            vfloat = rp.substring(rp.indexOf('.'));
+            rp = rp.substring(0, rp.indexOf('.'));
+        }
+        let p = rp.length;
+        let l;
+        while (p > 3) {
+            rupiah = ts + rp.substring(p - 3) + rupiah;
+            l = rp.length - 3;
+            rp = rp.substring(0, l);
+            p = rp.length;
+        }
+        rupiah = rp + rupiah;
+        vfloat = vfloat.replace('.', ds);
+        if (vfloat.length > dd) {
+            vfloat = vfloat.substring(0, dd + 1);
+        }
+        if (vfloat == '') {
+            vfloat = '.00';
+        }
+        return minusStr + rupiah + vfloat;
+    };
+    this.formatSize = function (size) {
+        if (typeof size == 'undefined') {
+            size = this.size;
+        }
+        var sizeStr = '';
+        var sizeKB = size / 1024;
+        if (parseInt(sizeKB) > 1024) {
+            var sizeMB = sizeKB / 1024;
+            if (parseInt(sizeMB) > 1024) {
+                var sizeGB = sizeMB / 1024;
+                sizeStr = sizeGB.toFixed(2) + ' GB';
+            } else {
+                sizeStr = sizeMB.toFixed(2) + ' MB';
+            }
+        } else {
+            sizeStr = sizeKB.toFixed(2) + ' KB';
+        }
+        return sizeStr;
+    };
+    this.numberWithCommas = (x) => {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+    this.numberToKilo = function (num) {
+        return Math.abs(num) > 999 ? this.numberWithCommas(Math.sign(num) * (Math.abs(num) / 1000).toFixed(1)) + 'K' : Math.sign(num) * Math.abs(num);
+    };
+    this.blockPage = function () {
+        let options = {};
+        options.innerMessage = '<div class="tb-loading-wrapper"><img src="/application/tribelio/default/media/img/light/loading.gif" class="loading-gif"></div>';
+        return window.cresenity.blockPage(options);
+    };
+    this.unblockPage = function () {
+        return window.cresenity.unblockPage();
+    };
+    this.blockElement = function (selector) {
+        let options = {};
+        options.innerMessage = '<div class="tb-loading-wrapper"><img src="/application/tribelio/default/media/img/light/loading.gif" class="loading-gif"></div>';
+        return window.cresenity.blockElement(selector, options);
+    };
+    this.unblockElement = function (selector) {
+        return window.cresenity.unblockElement(selector);
+    };
+
+    this.reload = function (reloadOptions) {
+        reloadOptions.blockType = 'default';
+        reloadOptions.blockHtml = '<div class="tb-loading-wrapper"><img src="/application/tribelio/default/media/img/light/loading.gif" class="loading-gif"></div>';
+        return window.cresenity.reload(reloadOptions);
+    };
+    this.append = function (appendOptions) {
+        return window.cresenity.append(appendOptions);
+    };
+    this.prepend = function (prependOptions) {
+        return window.cresenity.prepend(prependOptions);
+    };
+    this.modal = function (modalOptions) {
+        if (modalOptions.isSidebar) {
+            if (typeof modalOptions.onClose == 'undefined') {
+                modalOptions.onClose = function (e, next) {
+                    var $invoker = $(e.currentTarget);
+                    $invoker.addClass('uninit');
+                    setTimeout(function () {
+                        $invoker.removeClass('uninit').addClass('inited');
+                        $invoker.find('.modal-dialog').addClass('uninit');
+                    }, 1);
+
+
+                    next(500);
+                };
+            }
+        }
+
+        modalOptions.reload.blockType = 'default';
+        modalOptions.reload.blockHtml = '<div class="tb-loading-wrapper"><img src="/application/tribelio/default/media/img/light/loading.gif" class="loading-gif"></div>';
+
+        var modalContainer = window.cresenity.modal(modalOptions);
+        if (modalOptions.isSidebar) {
+            modalContainer.find('.modal-dialog').addClass('uninit');
+            setTimeout(function () {
+                modalContainer.find('.modal-dialog').removeClass('uninit').addClass('inited');
+            }, 1);
+        }
+        if (modalOptions.size){
+            modalContainer.find('.modal-dialog').removeClass('modal-xl');
+            modalContainer.find('.modal-dialog').addClass(modalOptions.size);
+        }
+        return modalContainer;
+    };
+
+    this.confirm = function (onConfirmed, message) {
+        if (typeof message == 'undefined') {
+            message = 'Are you sure?';
+        }
+        let confirmOptions = {};
+        confirmOptions.message = message;
+        confirmOptions.onConfirmed = onConfirmed;
+        return window.cresenity.confirm(confirmOptions);
+    };
+
+    this.closeLastModal = function () {
+        return window.cresenity.closeLastModal();
+    };
+
+    this.ajaxSubmit = function (ajaxOptions) {
+        return window.cresenity.ajaxSubmit(ajaxOptions);
+    };
+
+    this.applyModalReloadAction = function () {
+        var modalReloadAction = $('.modal-reload-action.uninit');
+        // eslint-disable-next-line no-unused-vars
+        modalReloadAction.each(function (itemIndex) {
+            $(this).click(function (e) {
+                e.stopPropagation();
+                var url = $(this).data('url');
+                var modalOptions = {};
+
+                modalOptions.reload = {};
+                modalOptions.reload.url = url;
+                modalOptions.reload.method = 'get';
+
+                modalOptions.isSidebar = true;
+
+                TB.modal(modalOptions);
+            });
+            $(this).removeClass('uninit');
+        });
+    };
+    this.applyAllAction = function () {
+        this.applyModalReloadAction();
+    };
+
+    // eslint-disable-next-line no-unused-vars
+    this.applyPagination = function (paginationOptions) {
+
+    };
+
+    this.showModal = function (message, options) {
+        var settings = $.extend({
+            // These are the defaults.
+            haveHeader: false,
+            haveFooter: false,
+            headerText: '',
+            onComplete: false,
+            modalClass: '',
+            footerAction: {}
+        }, options);
+
+        var modalContainer = jQuery('<div>').addClass('modal').addClass(settings.modalClass);
+
+        if (settings.asSidebar) {
+            modalContainer.addClass('sidebar');
+            modalContainer.addClass(settings.sidebarMode);
+        }
+        var modalDialog = jQuery('<div>').addClass('modal-dialog modal-xl modal-dialog-centered');
+        var modalContent = jQuery('<div>').addClass('modal-content');
+
+        var modalHeader = jQuery('<div>').addClass('modal-header');
+        var modalTitle = jQuery('<div>').addClass('modal-title');
+        var modalButtonClose = '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+        var modalBody = jQuery('<div>').addClass('modal-body');
+        var modalFooter = jQuery('<div>').addClass('modal-footer');
+        modalDialog.append(modalContent);
+        modalContainer.append(modalDialog);
+        if (settings.haveHeader) {
+            modalTitle.html(settings.headerText);
+            modalHeader.append(modalTitle).append(modalButtonClose);
+            modalContent.append(modalHeader);
+        }
+        modalDialog.append(modalContent);
+        if (settings.haveFooter) {
+            modalContent.append(modalFooter);
+        }
+        modalContent.append(modalBody);
+        $('body').append(modalContainer);
+
+        // eslint-disable-next-line no-unused-vars
+        modalContainer.on('hidden.bs.modal', function (e) {
+            modalContainer.remove();
+        });
+        modalBody.append(message);
+        modalContainer.modal();
+    };
+
+    this.getExcerpt = function (string, maxLength) {
+        if (maxLength == 'undefined') {
+            maxLength = 10;
+        }
+        var trimmedString = string.substr(0, maxLength);
+        var excerpt = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(' ')));
+        if (excerpt.length == 0) {
+            excerpt = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf('')));
+        }
+        return excerpt;
+    };
+
+    this.copyText = function (elementId) {
+        var copyText = document.getElementById(elementId);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        this.showInfo('Copied to Clipboard');
+    };
+
+    this.copyToClipboard = function (text) {
+        var $temp = $('<input>');
+        $('body').append($temp);
+        $temp.val(text).select();
+        document.execCommand('copy');
+        $temp.remove();
+    };
+
+    this.toastrCenter = function (type, message, autoClose=false) {
+        var hideDuration = 0;
+        var timeOut = 0;
+        var extendedTimeOut = 0;
+
+        if (autoClose === true) {
+            hideDuration = 1000;
+            timeOut = 5000;
+            extendedTimeOut = 1000;
+        }
+
+        window.toastr.options = {
+            closeButton: true,
+            debug: false,
+            newestOnTop: false,
+            progressBar: false,
+            positionClass: 'toast-top-right '+type,
+            preventDuplicates: true,
+            onclick: null,
+            showDuration: '300',
+            hideDuration: hideDuration,
+            timeOut: timeOut,
+            extendedTimeOut: extendedTimeOut,
+            showEasing: 'swing',
+            hideEasing: 'linear',
+            showMethod: 'fadeIn',
+            hideMethod: 'fadeOut'
+        };
+        window.toastr[type](message);
+    };
+
+    // eslint-disable-next-line no-unused-vars
+    this.defaultAjaxError = function (jqXHR, textStatus, errorThrown) {
+        //do nothing
+        //TB.showError('Something went wrong, please check your internet connection or refresh this page ['+textStatus+']')
+    };
+
+
+    this.isAndroidOrIos = () => {
+        var isAndroid = function () {
+            return navigator.userAgent.match('Android');
+        };
+
+
+        var isIos = function () {
+            return navigator.userAgent.match('iPad') ||
+                    navigator.userAgent.match('iPhone') ||
+                    navigator.userAgent.match('iPod');
+        };
+        return isAndroid() || isIos();
+    };
+
+    this.isSafari = () => {
+        var ua = navigator.userAgent.toLowerCase();
+        if (ua.indexOf('safari') != -1) {
+            if (ua.indexOf('chrome') > -1) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    };
+    this.showOpenApps = (unilinkUrl, deeplinkUrl) => {
+        let isDeeplink = false;
+        if(typeof deeplinkUrl === 'string') {
+            if(deeplinkUrl.startsWith('tribelio://')) {
+                if(!this.isSafari()) {
+                    // eslint-disable-next-line no-unused-vars
+                    isDeeplink = true;
+                    setTimeout(()=>{
+                        try {
+                            window.location.href=deeplinkUrl;
+                        } catch(e) {
+                            //do nothing
+                        }
+                    }, 50);
+                }
+            }
+        }
+        if (this.isAndroidOrIos()) {
+            var modal = $('<div class="apps-modal">');
+            var container = $('<div class="apps-container">');
+            var imgContainer = $('<div class="apps-img-container">');
+            var btnImg = $('<a class="apps-btn-img btn-deeplink">').append('<span aria-label="Open Apps"></span>');
+            btnImg.attr('href', unilinkUrl);
+            var contentContainer = $('<div class="apps-content">');
+            var descriptionContainer = $('<div class="apps-description">');
+            var descriptionContainerTitle = $('<div class="apps-description-title">').append('<div>Enjoy our Tribelio Application</div>');
+            var descriptionContainerContent = $('<div class="apps-description-content">').append('<div>Many feature only available on application</div>');
+
+            var openAppsContainer = $('<div class="apps-open-container">');
+            var btnOpenApps = $('<a class="apps-btn-open  btn-deeplink">').append('<div>Open Apps</div>');
+            var closeModalContainer = $('<div class="apps-close-container">');
+            var btnCloseModal = $('<a class="apps-btn-close">').append('<div>Next Time</div>');
+
+
+            // if(isDeeplink) {
+            // btnOpenApps.attr('href', deeplinkUrl);
+            // } else {
+            btnOpenApps.attr('href', unilinkUrl);
+            // }
+
+            imgContainer.append(btnImg);
+            descriptionContainer.append(descriptionContainerTitle).append(descriptionContainerContent);
+            openAppsContainer.append(btnOpenApps);
+            closeModalContainer.append(btnCloseModal);
+            contentContainer.append(descriptionContainer).append(openAppsContainer).append(closeModalContainer);
+            container.append(imgContainer).append(contentContainer);
+            modal.append(container);
+
+            $('body').append(modal);
+
+            // eslint-disable-next-line no-unused-vars
+            btnCloseModal.click(function (e) {
+                $('.apps-modal').remove();
+            });
+        }
+    };
+    /**
+     * Returns a promise that resolves when an element with a selector appears on the page for the first time.
+     * Note: Use elementReadyRAF if this is too slow or unreliable.
+     * @param {string} selector querySelector string
+     * @return {Promise} promise onready
+     */
+    this.elementReady = (selector) => {
+        // eslint-disable-next-line no-unused-vars
+        return new Promise((resolve, reject) => {
+            // eslint-disable-next-line no-unused-vars
+            const observer = new MutationObserver((mutations) => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach((element) => {
+                    if (!element.ready) {
+                        element.ready = true;
+                        observer.disconnect();
+                        resolve(element);
+                    }
+                });
+            });
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        });
+    };
+
+    /**
+     * Calls the callback function whenever an element with the selector gets rendered
+     * @param {string} selector querySelector string
+     * @param {function} callback function to fire when an element gets rendered
+     * @return {MutationObserver} the object that checks for the elements
+     */
+    this.elementRendered = (selector, callback) => {
+        const renderedElements = [];
+        // eslint-disable-next-line no-unused-vars
+        const observer = new MutationObserver((mutations) => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach((element) => {
+                if (!renderedElements.includes(element)) {
+                    renderedElements.push(element);
+                    callback(element);
+                }
+            });
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+        return observer;
+    };
+};
+
+window.TB = new TB();
+$(document).ready(function () {
+    window.TB.applyAllAction();
+
+    if (typeof window.TBShare !== 'undefined') {
+        let TBShare = window.TBShare;
+        window.tbShare = new TBShare();
+    }
+});
+
+$.TB = {
+    provinceControl: function (opt) {
+        var select2 = typeof opt.select2 == 'undefined' ? false : opt.select2;
+        var provinceSelector = typeof opt.province_selector == 'undefined' ? '#provinceId' : opt.province_selector;
+        var citySelector = typeof opt.city_selector == 'undefined' ? '#cityId' : opt.city_selector;
+        $(provinceSelector).change(function (evt) {
+            evt.preventDefault();
+            var provinceId = $(this).val();
+
+            var url = '/data/city';
+
+            var data = {provinceId: provinceId};
+            /* Send the data using post with element id name and name2*/
+            if (select2) {
+                $(citySelector).select2('enable', false);
+            } else {
+                $(citySelector).attr('disabled', 'disabled');
+            }
+
+            // eslint-disable-next-line no-unused-vars
+            var xhr = $.ajax({
+                url: url,
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function (data) {
+                    // eslint-disable-next-line no-unused-vars
+                    var msg;
+                    if (data.err_code > 0) {
+                        console.log(data.err_message);
+                    } else {
+                        if (select2) {
+                            $(citySelector).select2('destroy');
+                        }
+                        $(citySelector).empty();
+                        for (var i in data) {
+                            var row = data[i];
+                            $(citySelector).append($('<option>').attr('value', row.cityId).append(row.name));
+                        }
+                        // if (select2) {
+                        //     $(citySelector).select2();
+                        // }
+                        $(citySelector).trigger('change');
+                    }
+                },
+                // eslint-disable-next-line no-unused-vars
+                error: function (xhr, ajaxOptions, thrownError) {
+                    // eslint-disable-next-line no-alert
+                    alert('Unexpected error [Get City]');
+                },
+                complete: function () {
+                    if (select2) {
+                        $(citySelector).select2('disabled');
+                    } else {
+                        $(citySelector).removeAttr('disabled');
+                    }
+                }
+            });
+            return true;
+        });
+    },
+    blockElement: function (selector) {
+        // eslint-disable-next-line no-unused-vars
+        var height = $(selector).height();
+        $(selector).addClass('tb-have-block');
+        $(selector).block({
+            // message: '<div style="min-height=' + height + 'px"><div class="sk-wave sk-primary"><div class="sk-rect sk-rect1"></div> <div class="sk-rect sk-rect2"></div> <div class="sk-rect sk-rect3"></div> <div class="sk-rect sk-rect4"></div> <div class="sk-rect sk-rect5"></div></div></div>',
+            message: '<div class="tb-loading-wrapper"><img src="/application/tribelio/default/media/img/light/loading.gif" class="loading-gif"></div>',
+            css: {
+                backgroundColor: 'transparent',
+                border: '0'
+            },
+            overlayCSS: {
+                backgroundColor: '#fff',
+                opacity: 0.8
+            }
+        });
+    },
+    unblockElement: function (selector) {
+        $(selector).removeClass('tb-have-block');
+        $(selector).unblock();
+    },
+    appendSection: function (selector, url, method, dataAddition, callback) {
+        if (!method) {
+            method = 'get';
+        }
+        var element = jQuery(selector);
+        var xhr = element.data('xhr');
+        if (xhr) {
+            xhr.abort();
+        }
+
+        if (!dataAddition) {
+            dataAddition = {};
+        }
+
+        var elementHeight = element.height();
+
+        element.append('<div class="preloader loading valign-wrapper preloader-append-section center-align" style="height:' + elementHeight + 'px"><div class="progress"><div class="indeterminate"></div></div></div>');
+        element.addClass('loading');
+        element.data('xhr', jQuery.ajax({
+            type: method,
+            url: url,
+            dataType: 'json',
+            data: dataAddition,
+            success: function (data) {
+                window.cresenity.handleResponse(data, function () {
+                    if (data.ajaxData && data.ajaxData.redirectTo) {
+                        window.location.href = data.ajaxData.redirectTo;
+                        return;
+                    }
+                    jQuery(selector).find('.preloader-append-section').remove();
+                    jQuery(selector).append(data.html);
+                    if (data.js && data.js.length > 0) {
+                        var script = window.cresenity.base64.decode(data.js);
+                        eval(script);
+                    }
+
+                    element.removeClass('loading');
+                    element.data('xhr', false);
+
+                    if (typeof callback === 'function') {
+                        // Call it, since we have confirmed it is callable?
+                        callback(data);
+                    }
+                });
+            },
+            error: function (obj, t, msg) {
+                if (msg != 'abort') {
+                    // $.TB.showToast('error', 'Error, please call administrator... (' + msg + ')');
+                }
+            }
+        }));
+    },
+    formatThousand: function (price) {
+        var reverse = price.toString().split('').reverse().join(''),
+            thousand = reverse.match(/\d{1,3}/g);
+        thousand = thousand.join(',').split('').reverse().join('');
+        return thousand;
+    },
+    reloadSection: function (selector, url, method, dataAddition, callback) {
+        if (!method) {method = 'get';}
+        var element = jQuery(selector);
+        var xhr = element.data('xhr');
+        if (xhr) {
+            xhr.abort();
+        }
+
+        if (!dataAddition) {
+            dataAddition = {};
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        var cekelementHeight = element.height();
+        // eslint-disable-next-line no-unused-vars
+        var cekelementWidth = $(window).width();
+
+        // eslint-disable-next-line no-unused-vars
+        var elementHeight = '200';
+        // eslint-disable-next-line no-unused-vars
+        var elementWidth = '360';
+
+        $.TB.blockElement(element);
+        element.addClass('loading');
+        (function (thatElement) {
+            thatElement.data('xhr', jQuery.ajax({
+                type: method,
+                url: url,
+                dataType: 'json',
+                data: dataAddition,
+                success: function (data) {
+                    window.cresenity.handleResponse(data, function () {
+                        if (data.ajaxData && data.ajaxData.redirectTo) {
+                            window.location.href = data.ajaxData.redirectTo;
+                            return;
+                        }
+                        jQuery(selector).html(data.html);
+                        if (data.js && data.js.length > 0) {
+                            var script = window.cresenity.base64.decode(data.js);
+                            eval(script);
+                        }
+
+                        thatElement.removeClass('loading');
+                        thatElement.data('xhr', false);
+
+                        if (typeof callback === 'function') {
+                            // Call it, since we have confirmed it is callable?
+                            callback(data);
+                        }
+                    });
+                },
+                error: function (obj, t, msg) {
+                    if (msg != 'abort') {
+                        // $.TB.showToast('error', 'Error, please call administrator... (' + msg + ')');
+                    }
+                },
+                complete: function () {
+                    $.TB.unblockElement(thatElement);
+                }
+            }));
+        }(element));
+    }
+};

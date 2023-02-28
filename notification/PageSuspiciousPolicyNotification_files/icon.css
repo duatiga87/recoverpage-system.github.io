@@ -1,0 +1,82 @@
+/*
+    Created on : Nov 9, 2020, 3:28:34 PM
+    Author     : ekosantoso
+*/
+
+.icon {
+    width: 24px;
+    height: 24px;
+    position: relative;
+}
+.icon:before {
+    content: "";
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}
+.icon.icon-magnifier {}
+.icon.icon-magnifier:before {
+    background-image: url(../../../img/landingpage/v4/icon-magnifier.svg);
+}
+.icon.icon-google-sign:before {
+    background-image: url(../../../img/landingpage/v4/icon-google-sign.svg);
+    background-position: center;
+    background-size: 18px 18px;
+}
+.icon.icon-facebook-sign:before {
+    background-image: url(../../../img/landingpage/v4/icon-facebook-sign.svg);
+    background-position: center;
+    background-size: 18px 18px;
+}
+.icon.icon-award:before {
+    background-image: url(../../../img/landingpage/v4/icon-award.png);
+    background-position: center;
+    background-size: 18px 24px;
+}
+.icon.icon-award-white:before {
+    background-image: url(../../../img/landingpage/v4/icon-award-white.png);
+    background-position: center;
+    background-size: 18px 24px;
+}
+.icon.icon-award-cirle-orange:before {
+    background-image: url(../../../img/landingpage/v4/icon-award-circle-orange.png);
+    background-position: center;
+    background-size: 24px 24px;
+}
+.icon.icon-calendar:before {
+    background-image: url(../../../img/landingpage/v4/icon-calendar.svg);
+}
+.icon.icon-calendar.ui-wh-16:before {
+    width: 14px;
+    height: 16px;
+}
+.icon.icon-share-alt:before {
+    background-image: url(../../../img/landingpage/v4/icon-share-alt.svg);
+}
+.icon.icon-eye:before {
+    background-image: url(../../../img/landingpage/v4/icon-eye.svg);
+}
+.icon.icon-tags:before {
+    background-image: url(../../../img/landingpage/v4/icon-tags.svg);
+}
+
+.icon-share-facebook-round {
+    background-image: url("../../../img/light/icon/icon-share-facebook-round.svg");
+    background-size: 100%;
+}
+.icon-share-twitter-round {
+    background-image: url("../../../img/light/icon/icon-share-twitter-round.svg");
+    background-size: 100%;
+}
+.icon-share-whatsapp-round {
+    background-image: url("../../../img/light/icon/icon-share-whatsapp-round.svg");
+    background-size: 100%;
+}
+.icon-share-copylink-round {
+    background-image: url("../../../img/light/icon/icon-share-copylink-round.svg");
+    background-size: 100%;
+}

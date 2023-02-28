@@ -1,0 +1,145 @@
+var signupForm = $('form.tbcanvas-contact-form');
+if (signupForm.length > 0) {
+    $.each(signupForm, function(k, form){
+        let formObject = $(form);
+        let buttonSubmit = formObject.find('button');
+        let datadirectedto = formObject.attr('datadirectedto');
+        let dataLink = formObject.attr('datalink');
+
+        // set default +62
+        let selectPhoneCode = formObject.find('select[name=phone-code]');
+        if (selectPhoneCode.length > 0) {
+            selectPhoneCode.val('+62');
+        }
+
+        $(buttonSubmit).click(function(){
+            let formData = formObject.serializeArray();
+            let errCode = 0;
+            let errMessage = '';
+
+            let inputEmail = formObject.find('input[name=email]');
+            if(inputEmail.length > 0) {
+                if (inputEmail.val() == '') {
+                    errCode++;
+                    errMessage = 'Please fill your Email address';
+                }
+            }
+            let inputName = formObject.find('input[name=name]');
+            if (inputName.length > 0) {
+                if (inputName.val() == ' ') {
+                    errCode++;
+                    errMessage = 'Please fill your Name';
+                }
+            }
+
+            let inputPhone = formObject.find('input[name=phone]');
+            if (inputPhone.length > 0) {
+                let inputPhoneValue = inputPhone.val();
+                if (/\D/.test(inputPhoneValue)) {
+                    errCode++;
+                    errMessage = 'Please fill your Phone';
+                }
+            }
+
+            let inputGender = formObject.find('input[name=gender]');
+            if (inputGender.length > 0) {
+                let genderSelected = $('input[name=gender]:checked').val();
+                if (typeof genderSelected == 'undefined') {
+                    errCode++;
+                    errMessage = 'Please choose your Gender';
+                }
+            }
+            let inputText = formObject.find("input[name='text[]']");
+            if (inputText.length > 0) {
+                inputText.map(function(){
+                    var dataname = $(this).attr("data-name");
+                    formData.push({name:'labelList[]', value:dataname});
+                });
+            }
+
+            let formTags = formObject.attr('datatags');
+
+            if (typeof formTags != 'undefined' && formTags.length > 0 ) {
+                formData.push({name:'tags', value:formTags});
+            }
+
+            if (errCode > 0) {
+                TB.toastrCenter('error', errMessage);
+                return false;
+            }
+
+            if (errCode == 0) {
+                let tiktokEventType = $(this).attr("tiktok-event-type");
+                if (typeof ttq == 'object' && tiktokEventType.length > 0) {
+                    ttq.track(tiktokEventType);
+                }
+            }
+
+            $.ajax({
+                url : '',
+                method : 'POST',
+                data : formData,
+                dataType: 'json',
+                beforeSend: function(){
+                    TB.blockElement(signupForm);
+                },
+                success : function(res){
+                    if (res.errCode == 0) {
+                        if (datadirectedto == 'link' && dataLink.length>0) {
+                            window.location.href=dataLink;
+                            return false;
+                        }
+
+                        formObject[0].reset();
+                        if (formObject.find('select[name=phone-code]').length > 0) {
+                            formObject.find('select[name=phone-code]').val('+62');
+                        }
+
+                        thanksModalContent = `<div class="text-center"><img src="application/tribelio/default/media/img/light/thanks-form.svg" class="ml-4"><h3 class="font-size-24 mt-3 mb-1">Thank you!</h3><p class=font-size-14">Your submission has been sent, thank you</p></div>`;
+                        TB.showModal(thanksModalContent, {
+                            haveHeader: true,
+                            modalClass: 'modal-rounded header-border-0 body-pt-0'
+                        });
+
+                        // TB.toastrCenter('success', 'Thankyou for your submittion');
+                    }
+                    else {
+                        TB.toastrCenter('error', res.errMessage);
+                    }
+                    TB.unblockElement(signupForm);
+                },
+                failed : function(){
+                    TB.toastrCenter('error', 'Something went wrong');
+                    TB.unblockElement(signupForm);
+                }
+            });
+        });
+    });
+}
+
+function onCresentyLoaded() {
+    cresenity.observer.elementRendered('.tbcanvas-btn',(item)=>{
+        getParameterByName = (name, url = window.location.href) => {
+           name = name.replace(/[\[\]]/g, '\\$&');
+           var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+               results = regex.exec(url);
+           if (!results) return null;
+           if (!results[2]) return '';
+           return decodeURIComponent(results[2].replace(/\+/g, ' '));
+       }
+       const aff = getParameterByName('aff');
+       if(aff) {
+           let href = $(item).attr('href');
+           href = cresenity.url.addQueryString(href,'aff', aff);
+           $(item).attr('href',href);
+       }
+   });
+}
+
+if(typeof cresenity == 'object') {
+    onCresentyLoaded();
+} else {
+    window.addEventListener('cresenity:loaded', function () {
+        onCresentyLoaded();
+    });
+}

@@ -1,0 +1,397 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/*
+    Created on : May 5, 2020, 10:58:15 AM
+    Author     : Hery Kurniawan <hery@ittron.co.id at ittron.co.id>
+*/
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i&display=swap');
+/* font-family: 'Open Sans', sans-serif; */
+.apps-modal {
+    background: -webkit-gradient(linear,right top,left bottom,from(rgba(243,111,40,.9)),to(rgba(253,141,50,.9)));
+    background: -webkit-linear-gradient(top right,rgba(243,111,40,.9),rgba(253,141,50,.9));
+    background: linear-gradient(to bottom left,rgba(243,111,40,.9),rgba(253,141,50,.9));
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    text-align: center;
+    width: 100%;
+    z-index: 4;
+}
+
+.apps-modal.full-page {
+    height:100%;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+.apps-container {
+    font-family: 'Open Sans';
+    padding-bottom: 20px;
+    padding-top: 20px;
+    padding-left: 8%;
+    padding-right: 8%;
+    -webkit-box-flex: 0;
+    -webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    -webkit-box-pack: start;
+    -webkit-justify-content: flex-start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-align-content: stretch;
+    -ms-flex-line-pack: stretch;
+    align-content: stretch;
+    flex-direction: column;
+    margin-left: auto;
+    margin-right: auto;
+    height: 100%;
+}
+
+
+
+.apps-img-container {
+    height: 58px;
+    width: 58px;
+    margin-bottom: 12px;
+    -webkit-box-flex: 0;
+    -webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-align-content: stretch;
+    -ms-flex-line-pack: stretch;
+    align-content: stretch;
+    background-color: #fff;
+    background-color: rgba(255,255,255,1);
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.apps-btn-img {
+    width: 58px;
+    height: 58px;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    background: 0 0;
+    border-radius: 50%;
+    border-style: solid;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: -ms-inline-flexbox;
+    display: inline-flex;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    position: relative;
+}
+
+.apps-modal:not(.full-page) .apps-btn-img {
+    color: #f36f28!important;
+}
+
+.apps-btn-img span {
+    height: 30px;
+    width: 30px;
+    background-repeat: no-repeat;
+    background-image: url('../../img/tribelio/new-logo-tribelio.png');
+    background-size: 100%;
+
+}
+.apps-description {
+
+}
+.apps-description-title {
+    margin-bottom: 12px;
+    text-align: center;
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 18px;
+}
+.apps-description-content {
+    margin-bottom: 12px;
+    text-align: center;
+    display: block;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.apps-btn-open {
+    color:rgba(38,38,38,1);
+    background: #fff;
+    border-radius: 4px;
+    height: 32px;
+    font-size:12px;
+    padding: 0;
+    position: relative;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: block;
+    font-weight: 600;
+    padding: 5px 9px;
+    text-align: center;
+    text-transform: inherit;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom:12px;
+}
+
+
+a.apps-btn-open {
+    line-height: 24px;
+}
+.apps-btn-close {
+    background: 0 0;
+    margin-bottom: 5px;
+    padding: 10px;
+    height: 32px;
+    font-size:12px;
+    color:#979797;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: 0 0;
+    border: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: block;
+    font-weight: 600;
+    padding: 5px 9px;
+    text-align: center;
+    text-transform: inherit;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.list-login{
+    border: 1px solid #ccc;
+    width: 100%;
+    max-width: 320px;
+    padding: 12px;
+    background-color: #fff;
+    margin: 15px 0px;
+    position: relative;
+}
+
+.list-login img{
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    left: 30px;
+    top: 15px;
+    object-fit: contain;
+}
+
+.list-login a{
+    color: #fff;
+}
+
+.list-login.google{
+    background-color: #E85148;
+}
+
+.list-login.facebook{
+    background-color: #3B5998;
+}
+
+.list-login.email{
+    background-color: #979797;
+}
+
+.list-login.phone a{
+    color: #707070;
+}
+
+.apps-description-content.invitation{
+    display: flex;
+    justify-content: center;
+}
+
+.apps-img-container{
+    width: 200px;
+    margin-bottom: 150px;
+    background-color: transparent;
+}
+.apps-modal:not(.full-page) .apps-img-container {
+    margin-bottom: 20px;
+}
+.apps-container{
+    width: 100%;
+    margin-top: 5%;
+}
+
+.image-logo-tribelio{
+    width: 90px;
+    margin-bottom: 20px;
+}
+
+.apps-btn-open{
+    height: 45px;
+    line-height: 35px !important;
+    width: 100%;
+    background-color: #F57F17;
+    color: #fff;
+    font-size: 15px;
+}
+
+
+.apps-btn-open:hover{
+    color: #fff;
+}
+
+.apps-description-content.invitation .text{
+    width: 52%;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.apps-description-content.invitation .member-name{
+    font-weight: bold;
+    color: #F57F17;
+}
+
+.apps-modal{
+    background: #ffffff;
+    color: #707070;
+}
+
+.apps-description-title{
+    margin: 40px 0px;
+    font-size: 40px;
+}
+.apps-modal:not(.full-page) .apps-description-title{
+    margin: 0 0 6px 0;
+    font-size: unset;
+}
+
+.footer{
+    margin: 20px 0px;
+}
+
+.text-footer{
+    margin: 10px 0px;
+}
+
+.text-footer a{
+    font-weight: bold;
+    color: #707070;
+}
+
+.apps-container.form{
+    width: 100%;
+    max-width: 450px;
+    margin-top: unset;
+}
+
+.form-login-register{
+    text-align: center;
+    text-align: -webkit-center;
+}
+
+.form-login-register .form-control{
+    margin-bottom: 15px;
+}
+
+.form-login-register .form-control.submit{
+    border: none;
+}
+
+.form-login-register .form-control input{
+    width: 100%;
+    border: none;
+    font-size: 25px;
+    outline: none;
+}
+
+.form-login-register .form-control .date{
+    background-color: transparent;
+}
+
+.form-login-register .form-control .btn-submit{
+    margin: 20px 0px;
+    background-color: #979797;
+    color: #fff;
+    height: 40px;
+    font-size: 20px;
+    border-radius: 5px;
+    width: 85%;
+}
+
+.apps-container.form .apps-description-title{
+    margin: 0px 0px 40px 0px;
+    font-size: 25px;
+    font-weight: bold;
+    color: #000;
+}
+
+.icon-path{
+    width: 20px;
+    height: 20px;
+}
+
+.form-control.gender{
+    font-size: 25px;
+}
+
+.input-gender{
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0px;
+    margin-right: 10px;
+}
+
+.form-control.password{
+    position: relative;
+}
+
+.form-control.password .fas{
+    position: absolute;
+    right: 10px;
+    top: 20px;
+}
+
+.img-tribe{
+    width: 200px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 5%;
+}
